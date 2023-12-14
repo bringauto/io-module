@@ -18,7 +18,7 @@ int send_status_condition(const buffer current_status, const buffer new_status, 
         case bringauto::modules::io_module::ARDUINO_UNO_DEVICE_TYPE:
             return bringauto::modules::io_module::devices::arduino_uno::arduino_uno_send_status_condition(current_status, new_status);
         default:
-            return WRONG_FORMAT;
+            return NOT_OK;
     }
 }
 

@@ -18,7 +18,7 @@ int arduino_opta_send_status_condition(const buffer current_status, const buffer
     int rc2 = n_status.deserializeFromBuffer(new_status);
 
     if(rc1 == NOT_OK || rc2 == NOT_OK) {
-        return WRONG_FORMAT;
+        return NOT_OK;
     }
 
     for(int i = 0; i < c_status.getOutputStates().size(); i++) {
@@ -54,7 +54,7 @@ int arduino_opta_aggregate_status(buffer *aggregated_status, const buffer curren
     int rc = status.deserializeFromBuffer(new_status);
 
     if(rc == NOT_OK) {
-        return WRONG_FORMAT;
+        return NOT_OK;
     }
 
     return status.serializeToBuffer(aggregated_status);
@@ -67,7 +67,7 @@ int arduino_opta_aggregate_error(buffer *error_message, const buffer current_err
 
         int rc = status_object.deserializeFromBuffer(status);
         if(rc == NOT_OK) {
-            return WRONG_FORMAT;
+            return NOT_OK;
         }
         return bringauto::io_module_utils::SerializationUtils::serialize_error(error_message, status_object.getButtonPresses());
     }
@@ -80,7 +80,7 @@ int arduino_opta_aggregate_error(buffer *error_message, const buffer current_err
     int rc = status_object.deserializeFromBuffer(status);
 
     if(aggregated_button_presses < 0 || rc == NOT_OK) {
-        return WRONG_FORMAT;
+        return NOT_OK;
     }
 
     return bringauto::io_module_utils::SerializationUtils::serialize_error(error_message, aggregated_button_presses + status_object.getButtonPresses());

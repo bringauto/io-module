@@ -60,7 +60,7 @@ int forward_error_message(const buffer error_msg, const device_identification de
     return OK;
 }
 
-int device_disconnected(const disconnect_types disconnect_type, const device_identification device, void *context) {
+int device_disconnected(const int disconnect_type, const device_identification device, void *context) {
     if(context == nullptr) {
         return CONTEXT_INCORRECT;
     }
@@ -132,7 +132,7 @@ int wait_for_command(int timeout_time_in_ms, void *context) {
     }
 }
 
-int get_command(buffer* command, device_identification* device, void *context) {
+int pop_command(buffer* command, device_identification* device, void *context) {
     if(context == nullptr) {
         return CONTEXT_INCORRECT;
     }
