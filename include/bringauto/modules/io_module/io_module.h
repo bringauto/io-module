@@ -3,7 +3,7 @@
 namespace bringauto::modules::io_module {
 
 /// @brief Module identification number as described in Fleet protocol
-static const int IO_MODULE_NUMBER = 3;
+static const int IO_MODULE_NUMBER = 2;
 
 // Arduino Opta specific values
 
