@@ -17,7 +17,10 @@ ENDIF ()
 
 FIND_PACKAGE(nlohmann_json 3.10.5 REQUIRED)
 
-ADD_SUBDIRECTORY("lib/fleet-protocol")
+IF (NOT TARGET common_headers)
+    ADD_SUBDIRECTORY("lib/fleet-protocol")
+ENDIF ()
+
 
 FILE(GLOB_RECURSE HEADERS "include/*")
 
