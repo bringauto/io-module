@@ -21,6 +21,8 @@ IF (NOT TARGET common_headers)
     ADD_SUBDIRECTORY("lib/fleet-protocol")
 ENDIF ()
 
+ADD_SUBDIRECTORY("lib/fleet-http-client")
+ADD_SUBDIRECTORY("lib/fleet-protocol-cpp")
 
 FILE(GLOB_RECURSE HEADERS "include/*")
 
@@ -31,7 +33,8 @@ FILE(GLOB_RECURSE SOURCES "source/bringauto/*")
 
 ADD_LIBRARY(io_module_sources STATIC ${SOURCES})
 SET_PROPERTY(TARGET io_module_sources PROPERTY POSITION_INDEPENDENT_CODE ON)
-TARGET_LINK_LIBRARIES(io_module_sources PUBLIC io_module_hpp module_gateway_maintainer external_server nlohmann_json::nlohmann_json)
+TARGET_LINK_LIBRARIES(io_module_sources PUBLIC io_module_hpp module_gateway_maintainer external_server nlohmann_json::nlohmann_json
+                      fleet_http_client fleet-protocol::cxx_helpers)
 
 ADD_LIBRARY(io_module_gateway SHARED "source/module_manager.cpp" "source/device_management.cpp" "source/memory_management.cpp")
 TARGET_LINK_LIBRARIES(io_module_gateway PRIVATE io_module_hpp io_module_sources external_server common_headers
@@ -39,4 +42,4 @@ TARGET_LINK_LIBRARIES(io_module_gateway PRIVATE io_module_hpp io_module_sources 
 
 ADD_LIBRARY(io_external_server SHARED "source/external_server_api.cpp" "source/device_management.cpp" "source/memory_management.cpp")
 TARGET_LINK_LIBRARIES(io_external_server PRIVATE io_module_hpp io_module_sources external_server common_headers
-                      module_gateway_maintainer nlohmann_json::nlohmann_json)
+                      module_gateway_maintainer nlohmann_json::nlohmann_json fleet_http_client fleet-protocol::cxx_helpers)

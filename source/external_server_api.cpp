@@ -3,22 +3,115 @@
 #include <bringauto/modules/io_module/io_module.h>
 #include <bringauto/io_module_utils/DeviceCommand.hpp>
 #include <bringauto/io_module_utils/DeviceStatus.hpp>
-#include <bringauto/io_module_utils/DeviceID.hpp>
 #include <bringauto/io_module_utils/ConfigParameters.hpp>
 #include <bringauto/io_module_utils/external_server_api_structures.hpp>
 #include <bringauto/modules/io_module/devices/arduino_opta/arduino_opta_external_server.hpp>
 #include <bringauto/modules/io_module/devices/arduino_mega/arduino_mega_external_server.hpp>
 #include <bringauto/modules/io_module/devices/arduino_uno/arduino_uno_external_server.hpp>
+#include <bringauto/fleet_protocol/http_client/FleetApiClient.hpp>
+#include <bringauto/fleet_protocol/cxx/KeyValueConfig.hpp>
  
 #include <vector>
 #include <cstring>
 #include <iostream>
+#include <regex>
 
 using namespace std::chrono_literals;
 
 void *init(const config config_data) {
     auto *context = new struct bringauto::io_module_utils::context;
+    bringauto::fleet_protocol::cxx::KeyValueConfig config(config_data);
+    std::string api_url;
+    std::string api_key;
+    std::string company_name;
+    std::string car_name;
+    int max_requests_threshold_count;
+    int max_requests_threshold_period_ms;
+    int delay_after_threshold_reached_ms;
+    int retry_requests_delay_ms;
 
+    for (auto i = config.cbegin(); i != config.cend(); i++) {
+        if (i->first == "api_url") {
+            if (!std::regex_match(i->second, std::regex(R"(^(http|https)://([\w-]+\.)?+[\w-]+(:[0-9]+)?(/[\w-]*)?+$)"))) {
+                delete context;
+                return nullptr;
+            }
+            api_url = i->second;
+        }
+        else if (i->first == "api_key") {
+            if (i->second.empty()) {
+                delete context;
+                return nullptr;
+            }
+            api_key = i->second;
+        }
+        else if (i->first == "company_name") {
+            if (!std::regex_match(i->second, std::regex("^[a-z0-9_]*$")) || i->second.empty()) {
+                delete context;
+                return nullptr;
+            }
+            company_name = i->second;
+        }
+        else if (i->first == "car_name") {
+            if (!std::regex_match(i->second, std::regex("^[a-z0-9_]*$")) || i->second.empty()) {
+                delete context;
+                return nullptr;
+            }
+            car_name = i->second;
+        }
+        else if (i->first == "max_requests_threshold_count") {
+            try {
+                max_requests_threshold_count = std::stoi(i->second);
+                if (max_requests_threshold_count < 0 || i->second.empty()) {
+                    throw std::exception();
+                }
+            } catch (std::exception& e) {
+                delete context;
+                return nullptr;
+            }
+        }
+        else if (i->first == "max_requests_threshold_period_ms") {
+            try {
+                max_requests_threshold_period_ms = std::stoi(i->second);
+                if (max_requests_threshold_period_ms < 0 || i->second.empty()) {
+                    throw std::exception();
+                }
+            } catch (std::exception& e) {
+                delete context;
+                return nullptr;
+            }
+        }
+        else if (i->first == "delay_after_threshold_reached_ms") {
+            try {
+                delay_after_threshold_reached_ms = std::stoi(i->second);
+                if (delay_after_threshold_reached_ms < 0 || i->second.empty()) {
+                    throw std::exception();
+                }
+            } catch (std::exception& e) {
+                delete context;
+                return nullptr;
+            }
+        }
+        else if (i->first == "retry_requests_delay_ms") {
+            try {
+                retry_requests_delay_ms = std::stoi(i->second);
+                if (retry_requests_delay_ms < 0 || i->second.empty()) {
+                    throw std::exception();
+                }
+            } catch (std::exception& e) {
+                delete context;
+                return nullptr;
+            }
+        }
+    }
+
+    context->fleet_api_client = std::make_shared<bringauto::fleet_protocol::http_client::FleetApiClient>(
+        api_url, api_key, company_name, car_name,
+        max_requests_threshold_count, max_requests_threshold_period_ms,
+        delay_after_threshold_reached_ms, retry_requests_delay_ms
+    );
+
+    context->last_command_timestamp = 0;
     return context;
 }
 
@@ -123,12 +216,41 @@ int wait_for_command(int timeout_time_in_ms, void *context) {
     auto con = static_cast<struct bringauto::io_module_utils::context *> (context);
     
     std::unique_lock lock(con->mutex);
-    bool rc = con->con_variable.wait_for(lock, std::chrono::milliseconds(timeout_time_in_ms), [&]{return !con->command_vector.empty();});
-    if(rc) {
-        return OK;
+    std::vector<std::shared_ptr<org::openapitools::client::model::Message>> commands;
+    
+    try {
+        commands = con->fleet_api_client->getCommands(con->last_command_timestamp + 1, true);
+    } catch (std::exception& e) {
+        return TIMEOUT_OCCURRED;
+    }
+
+    for(auto command : commands) {
+        auto received_device_id = command->getDeviceId();
+        //TODO parse command
+        //MissionModule::AutonomyCommand proto_command {};
+        //google::protobuf::util::JsonStringToMessage(command->getPayload()->getData()->getJson().serialize(), &proto_command);
+        std::string command_str;
+        //proto_command.SerializeToString(&command_str);
+
+        //TODO convert command string to DeviceCommand
+        con->command_vector.emplace_back(/*command_str*/bringauto::io_module_utils::DeviceCommand(), bringauto::fleet_protocol::cxx::DeviceID(
+            received_device_id->getModuleId(),
+            received_device_id->getType(),
+            0, //priority
+            received_device_id->getRole(),
+            received_device_id->getName()
+        ));
+
+        if(command->getTimestamp() > con->last_command_timestamp) {
+            con->last_command_timestamp = command->getTimestamp();
+        }
+    }
+
+    if(commands.empty()) {
+        return TIMEOUT_OCCURRED;
     }
     else {
-        return TIMEOUT_OCCURRED;
+        return OK;
     }
 }
 
