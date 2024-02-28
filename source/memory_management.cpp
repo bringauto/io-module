@@ -2,6 +2,7 @@
 #include <general_error_codes.h>
 
 #include <cstdlib>
+#include <cstdint>
 #include <iostream>
 
 int allocate(buffer *buffer_pointer, size_t size_in_bytes){
