@@ -7,6 +7,7 @@
 #include <bringauto/io_module_utils/external_server_api_structures.hpp>
 #include <bringauto/fleet_protocol/http_client/FleetApiClient.hpp>
 #include <bringauto/fleet_protocol/cxx/KeyValueConfig.hpp>
+#include <bringauto/fleet_protocol/cxx/StringAsBuffer.hpp>
  
 #include <vector>
 #include <cstring>
@@ -244,8 +245,7 @@ int wait_for_command(int timeout_time_in_ms, void *context) {
 
         bringauto::io_module_utils::DeviceCommand command_obj;
         buffer command_buff {nullptr, 0};
-        allocate(&command_buff, command_str.size());
-        std::memcpy(command_buff.data, command_str.c_str(), command_buff.size_in_bytes);
+        bringauto::fleet_protocol::cxx::StringAsBuffer::createBufferAndCopyData(&command_buff, command_str);
         command_obj.deserializeFromBuffer(command_buff);
 
         con->command_vector.emplace_back(command_obj, bringauto::fleet_protocol::cxx::DeviceID(
