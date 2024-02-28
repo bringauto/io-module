@@ -5,9 +5,6 @@
 #include <bringauto/io_module_utils/DeviceStatus.hpp>
 #include <bringauto/io_module_utils/ConfigParameters.hpp>
 #include <bringauto/io_module_utils/external_server_api_structures.hpp>
-#include <bringauto/modules/io_module/devices/arduino_opta/arduino_opta_external_server.hpp>
-#include <bringauto/modules/io_module/devices/arduino_mega/arduino_mega_external_server.hpp>
-#include <bringauto/modules/io_module/devices/arduino_uno/arduino_uno_external_server.hpp>
 #include <bringauto/fleet_protocol/http_client/FleetApiClient.hpp>
 #include <bringauto/fleet_protocol/cxx/KeyValueConfig.hpp>
  
@@ -139,16 +136,27 @@ int forward_status(const buffer device_status, const device_identification devic
 
     auto con = static_cast<struct bringauto::io_module_utils::context *> (context);
 
-    switch(device.device_type) {
-        case bringauto::modules::io_module::ARDUINO_OPTA_DEVICE_TYPE:
-            return bringauto::modules::io_module::devices::arduino_opta::arduino_opta_forward_status(device_status, device, con);
-        case bringauto::modules::io_module::ARDUINO_MEGA_DEVICE_TYPE:
-            return bringauto::modules::io_module::devices::arduino_mega::arduino_mega_forward_status(device_status, device, con);
-        case bringauto::modules::io_module::ARDUINO_UNO_DEVICE_TYPE:
-            return bringauto::modules::io_module::devices::arduino_uno::arduino_uno_forward_status(device_status, device, con);
-        default:
-            return NOT_OK;     
+    bringauto::fleet_protocol::cxx::BufferAsString device_role(&device.device_role);
+    bringauto::fleet_protocol::cxx::BufferAsString device_name(&device.device_name);
+    bringauto::fleet_protocol::cxx::BufferAsString device_status_str(&device_status);
+    
+    con->fleet_api_client->setDeviceIdentification(
+        device.module,
+        device.device_type,
+        std::string(device_role.getStringView()),
+        std::string(device_name.getStringView())
+    );
+
+    try {
+        auto str = std::string(device_status_str.getStringView());
+        con->fleet_api_client->sendStatus(str);
+    } catch (std::exception& e) {
+        return NOT_OK;
     }
+
+    con->con_variable.notify_one();
+
+    return OK;
 }
 
 int forward_error_message(const buffer error_msg, const device_identification device, void *context) {
