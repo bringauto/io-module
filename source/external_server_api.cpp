@@ -232,14 +232,15 @@ int wait_for_command(int timeout_time_in_ms, void *context) {
 
     for(auto command : commands) {
         auto received_device_id = command->getDeviceId();
-        //TODO parse command
-        //MissionModule::AutonomyCommand proto_command {};
-        //google::protobuf::util::JsonStringToMessage(command->getPayload()->getData()->getJson().serialize(), &proto_command);
-        std::string command_str;
-        //proto_command.SerializeToString(&command_str);
+        std::string command_str = command->getPayload()->getData()->getJson().serialize();
 
-        //TODO convert command string to DeviceCommand
-        con->command_vector.emplace_back(/*command_str*/bringauto::io_module_utils::DeviceCommand(), bringauto::fleet_protocol::cxx::DeviceID(
+        bringauto::io_module_utils::DeviceCommand command_obj;
+        buffer command_buff {nullptr, 0};
+        allocate(&command_buff, command_str.size());
+        std::memcpy(command_buff.data, command_str.c_str(), command_buff.size_in_bytes);
+        command_obj.deserializeFromBuffer(command_buff);
+
+        con->command_vector.emplace_back(command_obj, bringauto::fleet_protocol::cxx::DeviceID(
             received_device_id->getModuleId(),
             received_device_id->getType(),
             0, //priority
