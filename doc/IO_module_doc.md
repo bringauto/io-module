@@ -1,6 +1,6 @@
 # IO Module documentation
 
-This is the documentation for IO module and this module's devices.
+This is the documentation which describes IO module and module's devices.
 
 ## Module proposal
 
@@ -141,4 +141,23 @@ Status will be forwarded to the external app when:
 
 Status will be forwarded to the external app when:
  - there is a difference between the previous and current status (e.g. output has been turned on; state of any input has changed)
+
+## Behaviour in External server
+
+The IO module in External server uses [this HTTP Api](https://github.com/bringauto/fleet-http-client) to communicate with some external app. The statuses are sent to the external app and the commands are received from it. The HTTP Api connection credentials must be forwarded to IO module config. The credentials in External server's config could look like this:
+
+```json
+{
+    // ...
+    "config": {
+        "api_url": "...",
+        "api_key": "...",
+        "max_requests_threshold_count": "10",
+        "max_requests_threshold_period_ms": "5000",
+        "delay_after_threshold_reached_ms": "5000",
+        "retry_requests_delay_ms": "200"
+    }
+    // ...
+}
+```
  

@@ -251,7 +251,7 @@ int wait_for_command(int timeout_time_in_ms, void *context) {
         con->command_vector.emplace_back(command_obj, bringauto::fleet_protocol::cxx::DeviceID(
             received_device_id->getModuleId(),
             received_device_id->getType(),
-            0, //priority
+            0, // priority not returned from HTTP Api
             received_device_id->getRole(),
             received_device_id->getName()
         ));
