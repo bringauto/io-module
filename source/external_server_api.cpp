@@ -1,15 +1,13 @@
-#include <external_server_interface.h>
+#include <fleet_protocol/module_maintainer/external_server/external_server_interface.h>
 #include <bringauto/io_module_utils/SerializationUtils.hpp>
 #include <bringauto/modules/io_module/io_module.h>
 #include <bringauto/io_module_utils/DeviceCommand.hpp>
 #include <bringauto/io_module_utils/DeviceStatus.hpp>
 #include <bringauto/io_module_utils/ConfigParameters.hpp>
 #include <bringauto/io_module_utils/external_server_api_structures.hpp>
-#include <bringauto/modules/io_module/devices/arduino_opta/arduino_opta_external_server.hpp>
-#include <bringauto/modules/io_module/devices/arduino_mega/arduino_mega_external_server.hpp>
-#include <bringauto/modules/io_module/devices/arduino_uno/arduino_uno_external_server.hpp>
 #include <bringauto/fleet_protocol/http_client/FleetApiClient.hpp>
 #include <bringauto/fleet_protocol/cxx/KeyValueConfig.hpp>
+#include <bringauto/fleet_protocol/cxx/StringAsBuffer.hpp>
  
 #include <vector>
 #include <cstring>
@@ -105,10 +103,16 @@ void *init(const config config_data) {
         }
     }
 
+    bringauto::fleet_protocol::http_client::FleetApiClient::FleetApiClientConfig fleet_api_config {
+        api_url, api_key, company_name, car_name
+    };
+
+    bringauto::fleet_protocol::http_client::RequestFrequencyGuard::RequestFrequencyGuardConfig request_frequency_guard_config {
+        max_requests_threshold_count, max_requests_threshold_period_ms, delay_after_threshold_reached_ms, retry_requests_delay_ms
+    };
+
     context->fleet_api_client = std::make_shared<bringauto::fleet_protocol::http_client::FleetApiClient>(
-        api_url, api_key, company_name, car_name,
-        max_requests_threshold_count, max_requests_threshold_period_ms,
-        delay_after_threshold_reached_ms, retry_requests_delay_ms
+        fleet_api_config, request_frequency_guard_config
     );
 
     context->last_command_timestamp = 0;
@@ -133,16 +137,30 @@ int forward_status(const buffer device_status, const device_identification devic
 
     auto con = static_cast<struct bringauto::io_module_utils::context *> (context);
 
-    switch(device.device_type) {
-        case bringauto::modules::io_module::ARDUINO_OPTA_DEVICE_TYPE:
-            return bringauto::modules::io_module::devices::arduino_opta::arduino_opta_forward_status(device_status, device, con);
-        case bringauto::modules::io_module::ARDUINO_MEGA_DEVICE_TYPE:
-            return bringauto::modules::io_module::devices::arduino_mega::arduino_mega_forward_status(device_status, device, con);
-        case bringauto::modules::io_module::ARDUINO_UNO_DEVICE_TYPE:
-            return bringauto::modules::io_module::devices::arduino_uno::arduino_uno_forward_status(device_status, device, con);
-        default:
-            return NOT_OK;     
+    bringauto::fleet_protocol::cxx::BufferAsString device_role(&device.device_role);
+    bringauto::fleet_protocol::cxx::BufferAsString device_name(&device.device_name);
+    bringauto::fleet_protocol::cxx::BufferAsString device_status_str(&device_status);
+    
+    con->fleet_api_client->setDeviceIdentification(
+        bringauto::fleet_protocol::cxx::DeviceID(
+            device.module,
+            device.device_type,
+            0, //priority
+            std::string(device_role.getStringView()),
+            std::string(device_name.getStringView())
+        )
+    );
+
+    try {
+        auto str = std::string(device_status_str.getStringView());
+        con->fleet_api_client->sendStatus(str);
+    } catch (std::exception& e) {
+        return NOT_OK;
     }
+
+    con->con_variable.notify_one();
+
+    return OK;
 }
 
 int forward_error_message(const buffer error_msg, const device_identification device, void *context) {
@@ -226,17 +244,20 @@ int wait_for_command(int timeout_time_in_ms, void *context) {
 
     for(auto command : commands) {
         auto received_device_id = command->getDeviceId();
-        //TODO parse command
-        //MissionModule::AutonomyCommand proto_command {};
-        //google::protobuf::util::JsonStringToMessage(command->getPayload()->getData()->getJson().serialize(), &proto_command);
-        std::string command_str;
-        //proto_command.SerializeToString(&command_str);
+        std::string command_str = command->getPayload()->getData()->getJson().serialize();
 
-        //TODO convert command string to DeviceCommand
-        con->command_vector.emplace_back(/*command_str*/bringauto::io_module_utils::DeviceCommand(), bringauto::fleet_protocol::cxx::DeviceID(
+        bringauto::io_module_utils::DeviceCommand command_obj;
+        buffer command_buff {nullptr, 0};
+        bringauto::fleet_protocol::cxx::StringAsBuffer::createBufferAndCopyData(&command_buff, command_str);
+
+        if(command_obj.deserializeFromBuffer(command_buff) == NOT_OK) {
+            return NOT_OK;
+        }
+
+        con->command_vector.emplace_back(command_obj, bringauto::fleet_protocol::cxx::DeviceID(
             received_device_id->getModuleId(),
             received_device_id->getType(),
-            0, //priority
+            0, // priority not returned from HTTP Api
             received_device_id->getRole(),
             received_device_id->getName()
         ));

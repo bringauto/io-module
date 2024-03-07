@@ -1,6 +1,6 @@
 #pragma once
 
-#include <memory_management.h>
+#include <fleet_protocol/common_headers/memory_management.h>
 
 namespace bringauto::modules::io_module::devices::arduino_mega {
 

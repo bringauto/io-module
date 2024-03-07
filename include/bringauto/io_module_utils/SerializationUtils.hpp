@@ -1,6 +1,6 @@
 #pragma once
 
-#include <memory_management.h>
+#include <fleet_protocol/common_headers/memory_management.h>
 #include <bringauto/fleet_protocol/cxx/DeviceID.hpp>
 
 #include <memory>

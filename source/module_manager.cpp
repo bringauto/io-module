@@ -1,4 +1,4 @@
-#include <module_manager.h>
+#include <fleet_protocol/module_maintainer/module_gateway/module_manager.h>
 #include <bringauto/modules/io_module/io_module.h>
 #include <bringauto/io_module_utils/SerializationUtils.hpp>
 #include <bringauto/io_module_utils/DeviceStatus.hpp>

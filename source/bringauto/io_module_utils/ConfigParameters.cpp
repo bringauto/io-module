@@ -1,5 +1,5 @@
 #include <bringauto/io_module_utils/ConfigParameters.hpp>
-#include <external_server_structures.h>
+#include <fleet_protocol/module_maintainer/external_server/external_server_structures.h>
 
 #include <vector>
 #include <string>

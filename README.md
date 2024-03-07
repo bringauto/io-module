@@ -19,7 +19,7 @@ make
 
 > cmakelib directory is absolute path to [this](https://github.com/cmakelib/cmakelib) repo root directory.
 
-Shared libraries `libio_module_module_manager.so` and `libio_module_external_server.so` should now be compiled in the current directory. Use `libio_module_module_manager.so` with module gateway and `libio_module_external_server.so` with external server.
+Shared libraries `libio_module_gateway.so` and `libio_external_server.so` should now be compiled in the current directory. Use `libio_module_gateway.so` with module gateway and `libio_external_server.so` with external server.
 
 # Python server
 

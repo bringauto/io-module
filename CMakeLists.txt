@@ -16,13 +16,10 @@ IF (NOT BRINGAUTO_SYSTEM_DEP)
 ENDIF ()
 
 FIND_PACKAGE(nlohmann_json 3.10.5 REQUIRED)
-
-IF (NOT TARGET common_headers)
-    ADD_SUBDIRECTORY("lib/fleet-protocol")
-ENDIF ()
+FIND_PACKAGE(fleet-protocol-cxx-helpers-static 1.1.1 REQUIRED)
+FIND_PACKAGE(fleet-protocol-interface 2.0.0 REQUIRED)
 
 ADD_SUBDIRECTORY("lib/fleet-http-client")
-ADD_SUBDIRECTORY("lib/fleet-protocol-cpp")
 
 FILE(GLOB_RECURSE HEADERS "include/*")
 
@@ -33,13 +30,22 @@ FILE(GLOB_RECURSE SOURCES "source/bringauto/*")
 
 ADD_LIBRARY(io_module_sources STATIC ${SOURCES})
 SET_PROPERTY(TARGET io_module_sources PROPERTY POSITION_INDEPENDENT_CODE ON)
-TARGET_LINK_LIBRARIES(io_module_sources PUBLIC io_module_hpp module_gateway_maintainer external_server nlohmann_json::nlohmann_json
-                      fleet_http_client fleet-protocol::cxx_helpers)
+TARGET_LINK_LIBRARIES(io_module_sources PUBLIC io_module_hpp nlohmann_json::nlohmann_json
+                      fleet-http-client-static
+                      fleet-protocol-interface::common-headers-interface
+                      fleet-protocol-interface::module-maintainer-module-gateway-interface
+                      fleet-protocol-interface::module-maintainer-external-server-interface
+                      fleet-protocol-cxx-helpers-static::fleet-protocol-cxx-helpers-static)
 
 ADD_LIBRARY(io_module_gateway SHARED "source/module_manager.cpp" "source/device_management.cpp" "source/memory_management.cpp")
-TARGET_LINK_LIBRARIES(io_module_gateway PRIVATE io_module_hpp io_module_sources external_server common_headers
-                      module_gateway_maintainer nlohmann_json::nlohmann_json)
+TARGET_LINK_LIBRARIES(io_module_gateway PRIVATE io_module_hpp io_module_sources nlohmann_json::nlohmann_json
+                      fleet-protocol-interface::common-headers-interface
+                      fleet-protocol-interface::module-maintainer-module-gateway-interface)
 
 ADD_LIBRARY(io_external_server SHARED "source/external_server_api.cpp" "source/device_management.cpp" "source/memory_management.cpp")
-TARGET_LINK_LIBRARIES(io_external_server PRIVATE io_module_hpp io_module_sources external_server common_headers
-                      module_gateway_maintainer nlohmann_json::nlohmann_json fleet_http_client fleet-protocol::cxx_helpers)
+TARGET_LINK_LIBRARIES(io_external_server PRIVATE io_module_hpp io_module_sources nlohmann_json::nlohmann_json 
+                      fleet-http-client-static
+                      fleet-protocol-interface::common-headers-interface
+                      fleet-protocol-interface::module-maintainer-module-gateway-interface
+                      fleet-protocol-interface::module-maintainer-external-server-interface
+                      fleet-protocol-cxx-helpers-static::fleet-protocol-cxx-helpers-static)

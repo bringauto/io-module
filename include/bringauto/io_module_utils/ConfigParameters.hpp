@@ -1,4 +1,5 @@
-#include <external_server_structures.h>
+#include <fleet_protocol/module_maintainer/external_server/external_server_structures.h>
+#include <fleet_protocol/module_maintainer/module_gateway/module_manager.h>
 
 #include <vector>
 #include <string>

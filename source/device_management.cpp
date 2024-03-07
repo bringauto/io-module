@@ -1,6 +1,6 @@
-#include <device_management.h>
+#include <fleet_protocol/common_headers/device_management.h>
 #include <bringauto/modules/io_module/io_module.h>
-#include <general_error_codes.h>
+#include <fleet_protocol/common_headers/general_error_codes.h>
 
 int get_module_number() {return bringauto::modules::io_module::IO_MODULE_NUMBER;}
 
