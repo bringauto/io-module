@@ -1,5 +1,5 @@
 #include <bringauto/modules/io_module/devices/arduino_mega/arduino_mega_module_manager.hpp>
-#include <module_manager.h>
+#include <fleet_protocol/module_maintainer/module_gateway/module_manager.h>
 #include <bringauto/modules/io_module/io_module.h>
 #include <bringauto/io_module_utils/DeviceStatus.hpp>
 #include <bringauto/io_module_utils/DeviceCommand.hpp>
