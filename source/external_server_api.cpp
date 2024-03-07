@@ -246,7 +246,10 @@ int wait_for_command(int timeout_time_in_ms, void *context) {
         bringauto::io_module_utils::DeviceCommand command_obj;
         buffer command_buff {nullptr, 0};
         bringauto::fleet_protocol::cxx::StringAsBuffer::createBufferAndCopyData(&command_buff, command_str);
-        command_obj.deserializeFromBuffer(command_buff);
+
+        if(command_obj.deserializeFromBuffer(command_buff) == NOT_OK) {
+            return NOT_OK;
+        }
 
         con->command_vector.emplace_back(command_obj, bringauto::fleet_protocol::cxx::DeviceID(
             received_device_id->getModuleId(),
