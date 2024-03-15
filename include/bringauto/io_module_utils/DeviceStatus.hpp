@@ -3,8 +3,8 @@
 #include <bringauto/io_module_utils/OutputStatus.hpp>
 #include <bringauto/io_module_utils/SerializationUtils.hpp>
 #include <bringauto/modules/io_module/io_module.h>
-#include <memory_management.h>
-#include <general_error_codes.h>
+#include <fleet_protocol/common_headers/memory_management.h>
+#include <fleet_protocol/common_headers/general_error_codes.h>
 
 #include <nlohmann/json.hpp>
 #include <array>

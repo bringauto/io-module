@@ -1,24 +1,127 @@
-#include <external_server_interface.h>
+#include <fleet_protocol/module_maintainer/external_server/external_server_interface.h>
 #include <bringauto/io_module_utils/SerializationUtils.hpp>
 #include <bringauto/modules/io_module/io_module.h>
 #include <bringauto/io_module_utils/DeviceCommand.hpp>
 #include <bringauto/io_module_utils/DeviceStatus.hpp>
-#include <bringauto/io_module_utils/DeviceID.hpp>
 #include <bringauto/io_module_utils/ConfigParameters.hpp>
 #include <bringauto/io_module_utils/external_server_api_structures.hpp>
-#include <bringauto/modules/io_module/devices/arduino_opta/arduino_opta_external_server.hpp>
-#include <bringauto/modules/io_module/devices/arduino_mega/arduino_mega_external_server.hpp>
-#include <bringauto/modules/io_module/devices/arduino_uno/arduino_uno_external_server.hpp>
+#include <bringauto/fleet_protocol/http_client/FleetApiClient.hpp>
+#include <bringauto/fleet_protocol/cxx/KeyValueConfig.hpp>
+#include <bringauto/fleet_protocol/cxx/StringAsBuffer.hpp>
  
 #include <vector>
 #include <cstring>
 #include <iostream>
+#include <regex>
 
 using namespace std::chrono_literals;
 
 void *init(const config config_data) {
     auto *context = new struct bringauto::io_module_utils::context;
+    bringauto::fleet_protocol::cxx::KeyValueConfig config(config_data);
+    std::string api_url;
+    std::string api_key;
+    std::string company_name;
+    std::string car_name;
+    int max_requests_threshold_count;
+    int max_requests_threshold_period_ms;
+    int delay_after_threshold_reached_ms;
+    int retry_requests_delay_ms;
 
+    for (auto i = config.cbegin(); i != config.cend(); i++) {
+        if (i->first == "api_url") {
+            if (!std::regex_match(i->second, std::regex(R"(^(http|https)://([\w-]+\.)?+[\w-]+(:[0-9]+)?(/[\w-]*)?+$)"))) {
+                delete context;
+                return nullptr;
+            }
+            api_url = i->second;
+        }
+        else if (i->first == "api_key") {
+            if (i->second.empty()) {
+                delete context;
+                return nullptr;
+            }
+            api_key = i->second;
+        }
+        else if (i->first == "company_name") {
+            if (!std::regex_match(i->second, std::regex("^[a-z0-9_]*$")) || i->second.empty()) {
+                delete context;
+                return nullptr;
+            }
+            company_name = i->second;
+        }
+        else if (i->first == "car_name") {
+            if (!std::regex_match(i->second, std::regex("^[a-z0-9_]*$")) || i->second.empty()) {
+                delete context;
+                return nullptr;
+            }
+            car_name = i->second;
+        }
+        else if (i->first == "max_requests_threshold_count") {
+            try {
+                max_requests_threshold_count = std::stoi(i->second);
+                if (max_requests_threshold_count < 0 || i->second.empty()) {
+                    throw std::exception();
+                }
+            } catch (std::exception& e) {
+                delete context;
+                return nullptr;
+            }
+        }
+        else if (i->first == "max_requests_threshold_period_ms") {
+            try {
+                max_requests_threshold_period_ms = std::stoi(i->second);
+                if (max_requests_threshold_period_ms < 0 || i->second.empty()) {
+                    throw std::exception();
+                }
+            } catch (std::exception& e) {
+                delete context;
+                return nullptr;
+            }
+        }
+        else if (i->first == "delay_after_threshold_reached_ms") {
+            try {
+                delay_after_threshold_reached_ms = std::stoi(i->second);
+                if (delay_after_threshold_reached_ms < 0 || i->second.empty()) {
+                    throw std::exception();
+                }
+            } catch (std::exception& e) {
+                delete context;
+                return nullptr;
+            }
+        }
+        else if (i->first == "retry_requests_delay_ms") {
+            try {
+                retry_requests_delay_ms = std::stoi(i->second);
+                if (retry_requests_delay_ms < 0 || i->second.empty()) {
+                    throw std::exception();
+                }
+            } catch (std::exception& e) {
+                delete context;
+                return nullptr;
+            }
+        }
+    }
+
+    bringauto::fleet_protocol::http_client::FleetApiClient::FleetApiClientConfig fleet_api_config {
+        .apiUrl = api_url,
+        .apiKey = api_key,
+        .companyName = company_name,
+        .carName = car_name
+    };
+
+    bringauto::fleet_protocol::http_client::RequestFrequencyGuard::RequestFrequencyGuardConfig request_frequency_guard_config {
+        .maxRequestsThresholdCount = max_requests_threshold_count,
+        .maxRequestsThresholdPeriodMs = std::chrono::milliseconds(max_requests_threshold_period_ms),
+        .delayAfterThresholdReachedMs = std::chrono::milliseconds(delay_after_threshold_reached_ms),
+        .retryRequestsDelayMs = std::chrono::milliseconds(retry_requests_delay_ms)
+    };
+
+    context->fleet_api_client = std::make_shared<bringauto::fleet_protocol::http_client::FleetApiClient>(
+        fleet_api_config, request_frequency_guard_config
+    );
+
+    context->last_command_timestamp = 0;
     return context;
 }
 
@@ -40,16 +143,30 @@ int forward_status(const buffer device_status, const device_identification devic
 
     auto con = static_cast<struct bringauto::io_module_utils::context *> (context);
 
-    switch(device.device_type) {
-        case bringauto::modules::io_module::ARDUINO_OPTA_DEVICE_TYPE:
-            return bringauto::modules::io_module::devices::arduino_opta::arduino_opta_forward_status(device_status, device, con);
-        case bringauto::modules::io_module::ARDUINO_MEGA_DEVICE_TYPE:
-            return bringauto::modules::io_module::devices::arduino_mega::arduino_mega_forward_status(device_status, device, con);
-        case bringauto::modules::io_module::ARDUINO_UNO_DEVICE_TYPE:
-            return bringauto::modules::io_module::devices::arduino_uno::arduino_uno_forward_status(device_status, device, con);
-        default:
-            return NOT_OK;     
+    bringauto::fleet_protocol::cxx::BufferAsString device_role(&device.device_role);
+    bringauto::fleet_protocol::cxx::BufferAsString device_name(&device.device_name);
+    bringauto::fleet_protocol::cxx::BufferAsString device_status_str(&device_status);
+    
+    con->fleet_api_client->setDeviceIdentification(
+        bringauto::fleet_protocol::cxx::DeviceID(
+            device.module,
+            device.device_type,
+            0, //priority
+            std::string(device_role.getStringView()),
+            std::string(device_name.getStringView())
+        )
+    );
+
+    try {
+        auto str = std::string(device_status_str.getStringView());
+        con->fleet_api_client->sendStatus(str);
+    } catch (std::exception& e) {
+        return NOT_OK;
     }
+
+    con->con_variable.notify_one();
+
+    return OK;
 }
 
 int forward_error_message(const buffer error_msg, const device_identification device, void *context) {
@@ -123,12 +240,44 @@ int wait_for_command(int timeout_time_in_ms, void *context) {
     auto con = static_cast<struct bringauto::io_module_utils::context *> (context);
     
     std::unique_lock lock(con->mutex);
-    bool rc = con->con_variable.wait_for(lock, std::chrono::milliseconds(timeout_time_in_ms), [&]{return !con->command_vector.empty();});
-    if(rc) {
-        return OK;
+    std::vector<std::shared_ptr<org::openapitools::client::model::Message>> commands;
+    
+    try {
+        commands = con->fleet_api_client->getCommands(con->last_command_timestamp + 1, true);
+    } catch (std::exception& e) {
+        return TIMEOUT_OCCURRED;
+    }
+
+    for(auto command : commands) {
+        auto received_device_id = command->getDeviceId();
+        std::string command_str = command->getPayload()->getData()->getJson().serialize();
+
+        bringauto::io_module_utils::DeviceCommand command_obj;
+        buffer command_buff {nullptr, 0};
+        bringauto::fleet_protocol::cxx::StringAsBuffer::createBufferAndCopyData(&command_buff, command_str);
+
+        if(command_obj.deserializeFromBuffer(command_buff) == NOT_OK) {
+            return NOT_OK;
+        }
+
+        con->command_vector.emplace_back(command_obj, bringauto::fleet_protocol::cxx::DeviceID(
+            received_device_id->getModuleId(),
+            received_device_id->getType(),
+            0, // priority not returned from HTTP Api
+            received_device_id->getRole(),
+            received_device_id->getName()
+        ));
+
+        if(command->getTimestamp() > con->last_command_timestamp) {
+            con->last_command_timestamp = command->getTimestamp();
+        }
+    }
+
+    if(commands.empty()) {
+        return TIMEOUT_OCCURRED;
     }
     else {
-        return TIMEOUT_OCCURRED;
+        return OK;
     }
 }
 

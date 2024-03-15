@@ -1,7 +1,7 @@
 #pragma once
 
-#include <memory_management.h>
-#include <bringauto/io_module_utils/DeviceID.hpp>
+#include <fleet_protocol/common_headers/memory_management.h>
+#include <bringauto/fleet_protocol/cxx/DeviceID.hpp>
 
 #include <memory>
 #include <nlohmann/json.hpp>
@@ -19,7 +19,7 @@ public:
 
     int static deserialize_error(char* error_buffer, size_t buffer_size);
 
-    struct DeviceID static deserialize_device_id(char* device_buffer, size_t buffer_size);
+    struct bringauto::fleet_protocol::cxx::DeviceID static deserialize_device_id(char* device_buffer, size_t buffer_size);
 };
 
 }

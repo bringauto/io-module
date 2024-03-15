@@ -1,6 +1,6 @@
 #include <bringauto/io_module_utils/SerializationUtils.hpp>
 #include <bringauto/modules/io_module/io_module.h>
-#include <general_error_codes.h>
+#include <fleet_protocol/common_headers/general_error_codes.h>
 
 #include <nlohmann/json.hpp>
 #include <memory>
@@ -56,7 +56,7 @@ int SerializationUtils::deserialize_error(char* error_buffer, size_t buffer_size
 
 }
 
-DeviceID SerializationUtils::deserialize_device_id(char* device_buffer, size_t buffer_size) {
+bringauto::fleet_protocol::cxx::DeviceID SerializationUtils::deserialize_device_id(char* device_buffer, size_t buffer_size) {
     json device_json;
 
     int module;
@@ -67,7 +67,7 @@ DeviceID SerializationUtils::deserialize_device_id(char* device_buffer, size_t b
         device_json = json::parse(device_buffer, device_buffer + buffer_size);
     }
     catch(const json::parse_error&) {
-        return DeviceID(0, 0, 0, "", "");
+        return bringauto::fleet_protocol::cxx::DeviceID(0, 0, 0, "", "");
     }
 
     try {
@@ -78,10 +78,10 @@ DeviceID SerializationUtils::deserialize_device_id(char* device_buffer, size_t b
         device_name = device_json.at("device_name");
     }
     catch(const json::out_of_range&) {
-        return DeviceID(0, 0, 0, "", "");
+        return bringauto::fleet_protocol::cxx::DeviceID(0, 0, 0, "", "");
     }
 
-    return DeviceID(module, device_type, priority, device_role.c_str(), device_name.c_str());
+    return bringauto::fleet_protocol::cxx::DeviceID(module, device_type, priority, device_role.c_str(), device_name.c_str());
 }
 
 }

@@ -1,6 +1,7 @@
 #pragma once
 
-#include <bringauto/io_module_utils/DeviceID.hpp>
+#include <bringauto/fleet_protocol/cxx/DeviceID.hpp>
+#include <bringauto/fleet_protocol/http_client/FleetApiClient.hpp>
 #include <bringauto/io_module_utils/DeviceCommand.hpp>
 
 #include <vector>
@@ -10,10 +11,12 @@
 namespace bringauto::io_module_utils {
 
 struct context {
+    std::shared_ptr<bringauto::fleet_protocol::http_client::FleetApiClient> fleet_api_client;
     std::vector<device_identification> devices;
-    std::vector<std::pair<bringauto::io_module_utils::DeviceCommand, bringauto::io_module_utils::DeviceID>> command_vector;
+    std::vector<std::pair<bringauto::io_module_utils::DeviceCommand, bringauto::fleet_protocol::cxx::DeviceID>> command_vector;
     std::mutex mutex;
     std::condition_variable con_variable;
+    long last_command_timestamp;
 };
 
 }
