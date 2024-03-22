@@ -24,8 +24,7 @@ ENDIF ()
 FIND_PACKAGE(nlohmann_json 3.10.5 REQUIRED)
 FIND_PACKAGE(fleet-protocol-cxx-helpers-static 1.1.1 REQUIRED)
 FIND_PACKAGE(fleet-protocol-interface 2.0.0 REQUIRED)
-
-ADD_SUBDIRECTORY("lib/fleet-http-client")
+FIND_PACKAGE(fleet-http-client-shared 1.2.0 REQUIRED)
 
 FILE(GLOB_RECURSE HEADERS "include/*")
 
@@ -37,7 +36,7 @@ FILE(GLOB_RECURSE SOURCES "source/bringauto/*")
 ADD_LIBRARY(io_module_sources STATIC ${SOURCES})
 SET_PROPERTY(TARGET io_module_sources PROPERTY POSITION_INDEPENDENT_CODE ON)
 TARGET_LINK_LIBRARIES(io_module_sources PUBLIC io_module_hpp nlohmann_json::nlohmann_json
-                      fleet-http-client-static
+                      fleet-http-client-shared
                       fleet-protocol-interface::common-headers-interface
                       fleet-protocol-interface::module-maintainer-module-gateway-interface
                       fleet-protocol-interface::module-maintainer-external-server-interface
