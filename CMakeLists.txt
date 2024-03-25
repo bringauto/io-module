@@ -96,6 +96,7 @@ IF (BRINGAUTO_INSTALL)
             TARGET io-module-interface
             NAMESPACE io-module-interface::
     )
+    BA_PACKAGE_DEPS_IMPORTED(io-module-interface)
 ENDIF ()
 
 IF (BRINGAUTO_PACKAGE)
