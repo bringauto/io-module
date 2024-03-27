@@ -1,6 +1,8 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.21)
 PROJECT(io_module CXX)
 
+SET(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
+SET(CMAKE_INSTALL_RPATH "$ORIGIN")
 SET(CMAKE_CXX_STANDARD 20)
 SET(CMAKE_CXX_EXTENSIONS OFF)   # For increased portability
 SET(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -24,22 +26,23 @@ ENDIF ()
 FIND_PACKAGE(nlohmann_json 3.10.5 REQUIRED)
 FIND_PACKAGE(fleet-protocol-cxx-helpers-static 1.1.1 REQUIRED)
 FIND_PACKAGE(fleet-protocol-interface 2.0.0 REQUIRED)
-FIND_PACKAGE(fleet-http-client-shared 1.2.0 REQUIRED)
+FIND_PACKAGE(fleet-http-client-shared 1.2.1 REQUIRED)
+
+### fleet-http-client dependencies
+FIND_PACKAGE(Boost REQUIRED)
+FIND_PACKAGE(cpprestsdk REQUIRED)
+FIND_PACKAGE(libbringauto_logger 1.2.0 REQUIRED)
+### fleet-http-client dependencies
 
 FILE(GLOB_RECURSE HEADERS "include/*")
-
 ADD_LIBRARY(io_module_hpp INTERFACE ${HEADERS})
 TARGET_INCLUDE_DIRECTORIES(io_module_hpp INTERFACE "include/")
 
 FILE(GLOB_RECURSE SOURCES "source/bringauto/*")
-
 ADD_LIBRARY(io_module_sources STATIC ${SOURCES})
 SET_PROPERTY(TARGET io_module_sources PROPERTY POSITION_INDEPENDENT_CODE ON)
 TARGET_LINK_LIBRARIES(io_module_sources PUBLIC io_module_hpp nlohmann_json::nlohmann_json
-                      fleet-http-client-shared
                       fleet-protocol-interface::common-headers-interface
-                      fleet-protocol-interface::module-maintainer-module-gateway-interface
-                      fleet-protocol-interface::module-maintainer-external-server-interface
                       fleet-protocol-cxx-helpers-static::fleet-protocol-cxx-helpers-static
 )
 
@@ -49,10 +52,10 @@ CMDEF_ADD_LIBRARY(
         SOURCES "source/module_manager.cpp" "source/memory_management.cpp" "source/device_management.cpp"
         VERSION ${IO_MODULE_VERSION}
 )
-TARGET_LINK_LIBRARIES(io-module-gateway-shared PRIVATE
-        io_module_hpp
+TARGET_LINK_LIBRARIES(io-module-gateway-shared
+        PRIVATE
         io_module_sources
-        nlohmann_json::nlohmann_json
+        PUBLIC
         fleet-protocol-interface::common-headers-interface
         fleet-protocol-interface::module-maintainer-module-gateway-interface
 )
@@ -60,18 +63,17 @@ TARGET_LINK_LIBRARIES(io-module-gateway-shared PRIVATE
 CMDEF_ADD_LIBRARY(
         LIBRARY_GROUP io-external-server
         TYPE SHARED
-        SOURCES "source/module_manager.cpp" "source/memory_management.cpp" "source/device_management.cpp"
+        SOURCES "source/external_server_api.cpp" "source/memory_management.cpp" "source/device_management.cpp"
         VERSION ${IO_MODULE_VERSION}
 )
-TARGET_LINK_LIBRARIES(io-external-server-shared PRIVATE
-        io_module_hpp
+TARGET_LINK_LIBRARIES(io-external-server-shared
+        PRIVATE
         io_module_sources
-        nlohmann_json::nlohmann_json
-        fleet-http-client-static
-        fleet-protocol-interface::common-headers-interface
-        fleet-protocol-interface::module-maintainer-module-gateway-interface
+        fleet-http-client-shared::fleet-http-client-shared
+        bringauto_logger::bringauto_logger
+        PUBLIC
         fleet-protocol-interface::module-maintainer-external-server-interface
-        fleet-protocol-cxx-helpers-static::fleet-protocol-cxx-helpers-static
+
 )
 
 CMDEF_ADD_LIBRARY(
