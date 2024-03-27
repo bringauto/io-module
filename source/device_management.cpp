@@ -9,6 +9,7 @@ int is_device_type_supported(unsigned int device_type) {
         case bringauto::modules::io_module::ARDUINO_OPTA_DEVICE_TYPE:
         case bringauto::modules::io_module::ARDUINO_MEGA_DEVICE_TYPE:
         case bringauto::modules::io_module::ARDUINO_UNO_DEVICE_TYPE:
+        case bringauto::modules::io_module::BUTTON_DEVICE_TYPE:
             return OK;
         default:
             return NOT_OK;
