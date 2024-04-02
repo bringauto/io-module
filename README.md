@@ -7,13 +7,13 @@ The current IO module supports these devices:
 
 # Requirements
 
- - nlohmann json C++ library
+ - [CMakeLib](https://github.com/cmakelib/cmakelib)
 
 # Build
 
 ```bash
 mkdir _build && cd _build
-cmake .. -DCMLIB_DIR=<path-to-cmakelib-dir>
+cmake .. -DCMLIB_DIR=<path-to-cmakelib-dir> -DCMAKE_BUILD_TYPE=Release
 make
 ```
 
