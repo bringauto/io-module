@@ -13,13 +13,13 @@ The current IO module supports these devices:
 
 ```bash
 mkdir _build && cd _build
-cmake .. -DCMLIB_DIR=<path-to-cmakelib-dir> -DCMAKE_BUILD_TYPE=Release
+cmake .. -DCMLIB_DIR=<path-to-cmakelib-dir> -DCMAKE_BUILD_TYPE=Release [-DBRINGAUTO_INSTALL=ON] [-DBRINGAUTO_PACKAGE=ON]
 make
 ```
 
-> cmakelib directory is absolute path to [this](https://github.com/cmakelib/cmakelib) repo root directory.
+> CMLIB_DIR directory is an absolute path to [cmlib](https://github.com/cmakelib/cmakelib) repo root directory.
 
-Shared libraries `libio_module_gateway.so` and `libio_external_server.so` should now be compiled in the current directory. Use `libio_module_gateway.so` with module gateway and `libio_external_server.so` with external server.
+Shared libraries `libio-module-gateway-shared.so` and `libio-external-server-shared.so` should now be compiled in the current directory. Use `libio-module-gateway-shared.so` with module gateway and `libio-external-server-shared.so` with external server.
 
 # Python server
 
