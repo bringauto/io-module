@@ -52,29 +52,7 @@ int button_aggregate_status(buffer *aggregated_status, const buffer current_stat
 }
 
 int button_aggregate_error(buffer *error_message, const buffer current_error_message, const buffer status){
-    if(current_error_message.data == nullptr){ // In this case, there is no current error message in error aggregator - creating default error
-        bringauto::io_module_utils::DeviceStatus<bringauto::modules::io_module::BUTTON_INPUTS_COUNT,
-                                             bringauto::modules::io_module::BUTTON_OUTPUTS_COUNT> status_object;
-
-        int rc = status_object.deserializeFromBuffer(status);
-        if(rc == NOT_OK) {
-            return NOT_OK;
-        }
-        return bringauto::io_module_utils::SerializationUtils::serialize_error(error_message, status_object.getButtonPresses());
-    }
-
-    int aggregated_button_presses = bringauto::io_module_utils::SerializationUtils::deserialize_error(static_cast<char*> (current_error_message.data), current_error_message.size_in_bytes);
-
-    bringauto::io_module_utils::DeviceStatus<bringauto::modules::io_module::BUTTON_INPUTS_COUNT,
-                                             bringauto::modules::io_module::BUTTON_OUTPUTS_COUNT> status_object;
-
-    int rc = status_object.deserializeFromBuffer(status);
-
-    if(aggregated_button_presses < 0 || rc == NOT_OK) {
-        return NOT_OK;
-    }
-
-    return bringauto::io_module_utils::SerializationUtils::serialize_error(error_message, aggregated_button_presses + status_object.getButtonPresses());
+    return bringauto::io_module_utils::SerializationUtils::serialize_error(error_message, 0);
 }
 
 int button_generate_first_command(buffer *default_command){
