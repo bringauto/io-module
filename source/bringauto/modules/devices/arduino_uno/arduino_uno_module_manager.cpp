@@ -6,7 +6,7 @@
 
 namespace bringauto::modules::io_module::devices::arduino_uno {
 
-int arduino_uno_send_status_condition(const buffer current_status, const buffer new_status){
+int arduino_uno_send_status_condition(const buffer current_status, const buffer new_status) {
     bringauto::io_module_utils::DeviceStatus<bringauto::modules::io_module::ARDUINO_UNO_INPUTS_COUNT,
                                              bringauto::modules::io_module::ARDUINO_UNO_OUTPUTS_COUNT> c_status;
 
@@ -36,7 +36,8 @@ int arduino_uno_send_status_condition(const buffer current_status, const buffer 
     return CONDITION_NOT_MET;
 }
 
-int arduino_uno_generate_command(buffer *generated_command, const buffer new_status, const buffer current_status, const buffer current_command){
+int arduino_uno_generate_command(buffer *generated_command, const buffer new_status, const buffer current_status,
+                                const buffer current_command) {
     if(allocate(generated_command, current_command.size_in_bytes) ==  NOT_OK) {
         return NOT_OK;
     }
@@ -44,7 +45,7 @@ int arduino_uno_generate_command(buffer *generated_command, const buffer new_sta
     return OK;
 }
 
-int arduino_uno_aggregate_status(buffer *aggregated_status, const buffer current_status, const buffer new_status){
+int arduino_uno_aggregate_status(buffer *aggregated_status, const buffer current_status, const buffer new_status) {
     bringauto::io_module_utils::DeviceStatus<bringauto::modules::io_module::ARDUINO_UNO_INPUTS_COUNT,
                                              bringauto::modules::io_module::ARDUINO_UNO_OUTPUTS_COUNT> status;
 
@@ -57,7 +58,7 @@ int arduino_uno_aggregate_status(buffer *aggregated_status, const buffer current
     return status.serializeToBuffer(aggregated_status);
 }
 
-int arduino_uno_aggregate_error(buffer *error_message, const buffer current_error_message, const buffer status){
+int arduino_uno_aggregate_error(buffer *error_message, const buffer current_error_message, const buffer status) {
     if(current_error_message.data == nullptr){ // In this case, there is no current error message in error aggregator - creating default error
         bringauto::io_module_utils::DeviceStatus<bringauto::modules::io_module::ARDUINO_UNO_INPUTS_COUNT,
                                              bringauto::modules::io_module::ARDUINO_UNO_OUTPUTS_COUNT> status_object;
@@ -83,7 +84,7 @@ int arduino_uno_aggregate_error(buffer *error_message, const buffer current_erro
     return bringauto::io_module_utils::SerializationUtils::serialize_error(error_message, aggregated_button_presses + status_object.getButtonPresses());
 }
 
-int arduino_uno_generate_first_command(buffer *default_command){
+int arduino_uno_generate_first_command(buffer *default_command) {
     bringauto::io_module_utils::DeviceCommand command;
     for(int i = bringauto::modules::io_module::OutputIndexes::OUTPUT_1; i <= bringauto::modules::io_module::OutputIndexes::OUTPUT_4; i++) {
         command.addOutputAction(bringauto::io_module_utils::OutputAction(i, bringauto::io_module_utils::ActionType::SET_OFF));
@@ -96,14 +97,14 @@ int arduino_uno_generate_first_command(buffer *default_command){
     return OK;
 }
 
-int arduino_uno_status_data_valid(const buffer status){
+int arduino_uno_status_data_valid(const buffer status) {
     bringauto::io_module_utils::DeviceStatus<bringauto::modules::io_module::ARDUINO_UNO_INPUTS_COUNT,
                                              bringauto::modules::io_module::ARDUINO_UNO_OUTPUTS_COUNT> status_object;
 
     return status_object.deserializeFromBuffer(status);
 }
 
-int arduino_uno_command_data_valid(const buffer command){
+int arduino_uno_command_data_valid(const buffer command) {
     bringauto::io_module_utils::DeviceCommand command_object;
 
     return command_object.deserializeFromBuffer(command);
