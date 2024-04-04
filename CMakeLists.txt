@@ -26,13 +26,14 @@ ENDIF ()
 FIND_PACKAGE(nlohmann_json 3.10.5 REQUIRED)
 FIND_PACKAGE(fleet-protocol-cxx-helpers-static 1.1.1 REQUIRED)
 FIND_PACKAGE(fleet-protocol-interface 2.0.0 REQUIRED)
-FIND_PACKAGE(fleet-http-client-shared 1.2.1 REQUIRED)
+FIND_PACKAGE(fleet-http-client-shared 1.2.2 REQUIRED)
 
 ### fleet-http-client dependencies
 FIND_PACKAGE(Boost REQUIRED)
 FIND_PACKAGE(cpprestsdk REQUIRED)
 FIND_PACKAGE(libbringauto_logger 1.2.0 REQUIRED)
 ### fleet-http-client dependencies
+
 
 FILE(GLOB_RECURSE HEADERS "include/*")
 ADD_LIBRARY(io_module_hpp INTERFACE ${HEADERS})
@@ -70,10 +71,8 @@ TARGET_LINK_LIBRARIES(io-external-server-shared
         PRIVATE
         io_module_sources
         fleet-http-client-shared::fleet-http-client-shared
-        bringauto_logger::bringauto_logger
         PUBLIC
         fleet-protocol-interface::module-maintainer-external-server-interface
-
 )
 
 CMDEF_ADD_LIBRARY(
