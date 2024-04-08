@@ -12,7 +12,32 @@ SET(IO_MODULE_VERSION 1.2.0)
 OPTION(BRINGAUTO_INSTALL "Configure install" OFF)
 OPTION(BRINGAUTO_PACKAGE "Configure package creation" OFF)
 OPTION(BRINGAUTO_SYSTEM_DEP "System dependencies are used if switched to ON, packager used if OFF" OFF)
+OPTION(FLEET_PROTOCOL_BUILD_MODULE_GATEWAY "Build shared library for module gateway " ON)
+OPTION(FLEET_PROTOCOL_BUILD_EXTERNAL_SERVER "Build shared library for external server " ON)
 
+IF (BRINGAUTO_PACKAGE)
+    IF (NOT BRINGAUTO_INSTALL)
+        SET(BRINGAUTO_INSTALL ON
+                CACHE BOOL
+                "Installation forced by BRINGAUTO_PACKAGE creation"
+                FORCE
+        )
+    ENDIF ()
+    IF (NOT FLEET_PROTOCOL_BUILD_MODULE_GATEWAY)
+        SET(FLEET_PROTOCOL_BUILD_MODULE_GATEWAY ON
+                CACHE BOOL
+                "Module gateway module build forced by BRINGAUTO_PACKAGE creation"
+                FORCE
+        )
+    ENDIF ()
+    IF (NOT FLEET_PROTOCOL_BUILD_EXTERNAL_SERVER)
+        SET(FLEET_PROTOCOL_BUILD_EXTERNAL_SERVER ON
+                CACHE BOOL
+                "External server module build forced by BRINGAUTO_PACKAGE creation"
+                FORCE
+        )
+    ENDIF ()
+ENDIF ()
 
 FIND_PACKAGE(CMLIB
     COMPONENTS CMDEF CMUTIL STORAGE
@@ -26,14 +51,20 @@ ENDIF ()
 FIND_PACKAGE(nlohmann_json 3.10.5 REQUIRED)
 FIND_PACKAGE(fleet-protocol-cxx-helpers-static 1.1.1 REQUIRED)
 FIND_PACKAGE(fleet-protocol-interface 2.0.0 REQUIRED)
-FIND_PACKAGE(fleet-http-client-shared 1.2.2 REQUIRED)
 
-### fleet-http-client dependencies
-FIND_PACKAGE(Boost REQUIRED)
-FIND_PACKAGE(cpprestsdk REQUIRED)
-FIND_PACKAGE(libbringauto_logger 1.2.0 REQUIRED)
-### fleet-http-client dependencies
+IF (FLEET_PROTOCOL_BUILD_EXTERNAL_SERVER)
+    FIND_PACKAGE(fleet-http-client-shared 1.2.2 REQUIRED)
+    ### fleet-http-client dependencies
+    FIND_PACKAGE(Boost REQUIRED)
+    FIND_PACKAGE(cpprestsdk REQUIRED)
+    FIND_PACKAGE(libbringauto_logger 1.2.0 REQUIRED)
+ENDIF ()
 
+CMDEF_ADD_LIBRARY(
+        LIBRARY_GROUP io-module
+        TYPE INTERFACE
+        VERSION ${IO_MODULE_VERSION}
+)
 
 FILE(GLOB_RECURSE HEADERS "include/*")
 ADD_LIBRARY(io_module_hpp INTERFACE ${HEADERS})
@@ -47,52 +78,57 @@ TARGET_LINK_LIBRARIES(io_module_sources PUBLIC io_module_hpp nlohmann_json::nloh
                       fleet-protocol-cxx-helpers-static::fleet-protocol-cxx-helpers-static
 )
 
-CMDEF_ADD_LIBRARY(
-        LIBRARY_GROUP io-module-gateway
-        TYPE SHARED
-        SOURCES "source/module_manager.cpp" "source/memory_management.cpp" "source/device_management.cpp"
-        VERSION ${IO_MODULE_VERSION}
-)
-TARGET_LINK_LIBRARIES(io-module-gateway-shared
-        PRIVATE
-        io_module_sources
-        PUBLIC
-        fleet-protocol-interface::common-headers-interface
-        fleet-protocol-interface::module-maintainer-module-gateway-interface
-)
+IF (FLEET_PROTOCOL_BUILD_MODULE_GATEWAY)
+    CMDEF_ADD_LIBRARY(
+            LIBRARY_GROUP io-module-gateway
+            TYPE SHARED
+            SOURCES "source/module_manager.cpp" "source/memory_management.cpp" "source/device_management.cpp"
+            VERSION ${IO_MODULE_VERSION}
+    )
+    TARGET_LINK_LIBRARIES(io-module-gateway-shared
+            PRIVATE
+            io_module_sources
+            PUBLIC
+            fleet-protocol-interface::common-headers-interface
+            fleet-protocol-interface::module-maintainer-module-gateway-interface
+    )
+    TARGET_LINK_LIBRARIES(io-module-interface INTERFACE
+            io-module-gateway-shared
+    )
+ENDIF ()
 
-CMDEF_ADD_LIBRARY(
-        LIBRARY_GROUP io-external-server
-        TYPE SHARED
-        SOURCES "source/external_server_api.cpp" "source/memory_management.cpp" "source/device_management.cpp"
-        VERSION ${IO_MODULE_VERSION}
-)
-TARGET_LINK_LIBRARIES(io-external-server-shared
-        PRIVATE
-        io_module_sources
-        fleet-http-client-shared::fleet-http-client-shared
-        PUBLIC
-        fleet-protocol-interface::module-maintainer-external-server-interface
-)
+IF (FLEET_PROTOCOL_BUILD_EXTERNAL_SERVER)
+    CMDEF_ADD_LIBRARY(
+            LIBRARY_GROUP io-external-server
+            TYPE SHARED
+            SOURCES "source/external_server_api.cpp" "source/memory_management.cpp" "source/device_management.cpp"
+            VERSION ${IO_MODULE_VERSION}
+    )
+    TARGET_LINK_LIBRARIES(io-external-server-shared
+            PRIVATE
+            io_module_sources
+            fleet-http-client-shared::fleet-http-client-shared
+            PUBLIC
+            fleet-protocol-interface::module-maintainer-external-server-interface
+    )
+    TARGET_LINK_LIBRARIES(io-module-interface INTERFACE
+            io-external-server-shared
+    )
+ENDIF ()
 
-CMDEF_ADD_LIBRARY(
-        LIBRARY_GROUP io-module
-        TYPE INTERFACE
-        VERSION ${IO_MODULE_VERSION}
-)
-TARGET_LINK_LIBRARIES(io-module-interface INTERFACE
-        io-module-gateway-shared
-        io-external-server-shared
-)
 IF (BRINGAUTO_INSTALL)
-    CMDEF_INSTALL(
-            TARGET io-module-gateway-shared
-            NAMESPACE io-module-interface::
-    )
-    CMDEF_INSTALL(
-            TARGET io-external-server-shared
-            NAMESPACE io-module-interface::
-    )
+    IF (FLEET_PROTOCOL_BUILD_MODULE_GATEWAY)
+        CMDEF_INSTALL(
+                TARGET io-module-gateway-shared
+                NAMESPACE io-module-interface::
+        )
+    ENDIF ()
+    IF (FLEET_PROTOCOL_BUILD_EXTERNAL_SERVER)
+        CMDEF_INSTALL(
+                TARGET io-external-server-shared
+                NAMESPACE io-module-interface::
+        )
+    ENDIF ()
     CMDEF_INSTALL(
             TARGET io-module-interface
             NAMESPACE io-module-interface::
