@@ -241,6 +241,7 @@ int wait_for_command(int timeout_time_in_ms, void *context) {
     
     std::unique_lock lock(con->mutex);
     std::vector<std::shared_ptr<org::openapitools::client::model::Message>> commands;
+    bool parse_commands = con->last_command_timestamp != 0;
     
     try {
         commands = con->fleet_api_client->getCommands(con->last_command_timestamp + 1, true);
@@ -249,31 +250,33 @@ int wait_for_command(int timeout_time_in_ms, void *context) {
     }
 
     for(auto command : commands) {
-        auto received_device_id = command->getDeviceId();
-        std::string command_str = command->getPayload()->getData()->getJson().serialize();
-
-        bringauto::io_module_utils::DeviceCommand command_obj;
-        buffer command_buff {nullptr, 0};
-        bringauto::fleet_protocol::cxx::StringAsBuffer::createBufferAndCopyData(&command_buff, command_str);
-
-        if(command_obj.deserializeFromBuffer(command_buff) == NOT_OK) {
-            return NOT_OK;
-        }
-
-        con->command_vector.emplace_back(command_obj, bringauto::fleet_protocol::cxx::DeviceID(
-            received_device_id->getModuleId(),
-            received_device_id->getType(),
-            0, // priority not returned from HTTP Api
-            received_device_id->getRole(),
-            received_device_id->getName()
-        ));
-
         if(command->getTimestamp() > con->last_command_timestamp) {
             con->last_command_timestamp = command->getTimestamp();
         }
+
+        if(parse_commands) {
+            auto received_device_id = command->getDeviceId();
+            std::string command_str = command->getPayload()->getData()->getJson().serialize();
+
+            bringauto::io_module_utils::DeviceCommand command_obj;
+            buffer command_buff {nullptr, 0};
+            bringauto::fleet_protocol::cxx::StringAsBuffer::createBufferAndCopyData(&command_buff, command_str);
+
+            if(command_obj.deserializeFromBuffer(command_buff) == NOT_OK) {
+                return NOT_OK;
+            }
+
+            con->command_vector.emplace_back(command_obj, bringauto::fleet_protocol::cxx::DeviceID(
+                received_device_id->getModuleId(),
+                received_device_id->getType(),
+                0, // priority not returned from HTTP Api
+                received_device_id->getRole(),
+                received_device_id->getName()
+            ));
+        }
     }
 
-    if(commands.empty()) {
+    if(commands.empty() || !parse_commands) {
         return TIMEOUT_OCCURRED;
     }
     else {
