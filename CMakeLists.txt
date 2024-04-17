@@ -7,7 +7,7 @@ SET(CMAKE_CXX_STANDARD 20)
 SET(CMAKE_CXX_EXTENSIONS OFF)   # For increased portability
 SET(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-SET(IO_MODULE_VERSION 1.2.3)
+SET(IO_MODULE_VERSION 1.2.4)
 
 OPTION(BRINGAUTO_INSTALL "Configure install" OFF)
 OPTION(BRINGAUTO_PACKAGE "Configure package creation" OFF)
@@ -53,7 +53,7 @@ FIND_PACKAGE(fleet-protocol-cxx-helpers-static 1.1.1 REQUIRED)
 FIND_PACKAGE(fleet-protocol-interface 2.0.0 REQUIRED)
 
 IF (FLEET_PROTOCOL_BUILD_EXTERNAL_SERVER)
-    FIND_PACKAGE(fleet-http-client-shared 1.2.2 REQUIRED)
+    FIND_PACKAGE(fleet-http-client-shared 1.2.3 REQUIRED)
     ### fleet-http-client dependencies
     FIND_PACKAGE(Boost REQUIRED)
     FIND_PACKAGE(cpprestsdk REQUIRED)

@@ -6,7 +6,7 @@ BA_PACKAGE_LIBRARY(fleet-protocol-cxx-helpers-static    v1.1.1)
 BA_PACKAGE_LIBRARY(fleet-protocol-interface             v2.0.0 PLATFORM_STRING_MODE any_machine NO_DEBUG ON)
 
 IF (FLEET_PROTOCOL_BUILD_EXTERNAL_SERVER)
-    BA_PACKAGE_LIBRARY(fleet-http-client-shared             v1.2.2)
+    BA_PACKAGE_LIBRARY(fleet-http-client-shared             v1.2.3)
     BA_PACKAGE_LIBRARY(boost         v1.78.0)
     BA_PACKAGE_LIBRARY(cpprestsdk    v2.10.20)
     BA_PACKAGE_LIBRARY(ba-logger     v1.2.0)
