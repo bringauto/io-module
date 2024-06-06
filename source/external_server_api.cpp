@@ -272,13 +272,20 @@ int wait_for_command(int timeout_time_in_ms, void *context) {
         return TIMEOUT_OCCURRED;
     }
 
+    bool received_no_commands = true;
     for(auto command : commands) {
         if(command->getTimestamp() > con->last_command_timestamp) {
             con->last_command_timestamp = command->getTimestamp();
         }
 
+        auto received_device_id = command->getDeviceId();
+        if(received_device_id->getModuleId() == bringauto::modules::io_module::IO_MODULE_NUMBER) {
+            received_no_commands = false;
+        } else {
+            continue;
+        }
+
         if(parse_commands) {
-            auto received_device_id = command->getDeviceId();
             std::string command_str = command->getPayload()->getData()->getJson().serialize();
 
             bringauto::io_module_utils::DeviceCommand command_obj;
@@ -299,16 +306,14 @@ int wait_for_command(int timeout_time_in_ms, void *context) {
         }
     }
 
-    if(commands.empty() && !parse_commands) {
+    if(received_no_commands && !parse_commands) {
         con->last_command_timestamp = 1;
     }
 
-    if(commands.empty() || !parse_commands) {
+    if(received_no_commands || !parse_commands) {
         return TIMEOUT_OCCURRED;
     }
-    else {
-        return OK;
-    }
+    return OK;
 }
 
 int pop_command(buffer* command, device_identification* device, void *context) {
