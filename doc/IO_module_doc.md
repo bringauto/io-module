@@ -142,6 +142,20 @@ Status will be forwarded to the external app when:
 Status will be forwarded to the external app when:
  - there is a difference between the previous and current status (e.g. output has been turned on; state of any input has changed)
 
+### Button
+
+Simple general button representation. The input is true when button is not pressed and false when button is pressed.
+
+#### Device specs
+ - input count : 1
+ - output count: 0
+ - no button (buttonPresses always 0) - button functionality is forwarded via input
+
+#### Status forwarding
+
+Status will be forwarded to the external app when:
+ - there is a difference between the previous and current status (e.g. output has been turned on; state of any input has changed)
+
 ## Behaviour in External server
 
 The IO module in External server uses [this HTTP Api](https://github.com/bringauto/fleet-http-client) to communicate with some external app. The statuses are sent to the external app and the commands are received from it. The HTTP Api connection credentials must be forwarded to IO module config. The credentials in External server's config could look like this:

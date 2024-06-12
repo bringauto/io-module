@@ -32,6 +32,15 @@ static const int ARDUINO_UNO_INPUTS_COUNT = 6;
 /// @brief Number of outputs on Arduino Uno
 static const int ARDUINO_UNO_OUTPUTS_COUNT = 7;
 
+// Button specific values
+
+/// @brief Button identification as described in Fleet protocol
+static const int BUTTON_DEVICE_TYPE = 4;
+/// @brief Number of inputs on Button
+static const int BUTTON_INPUTS_COUNT = 1;
+/// @brief Number of outputs on Button
+static const int BUTTON_OUTPUTS_COUNT = 0;
+
 /// @brief Indexes of outputs
 enum OutputIndexes { OUTPUT_1, OUTPUT_2, OUTPUT_3, OUTPUT_4, OUTPUT_5, OUTPUT_6, OUTPUT_7, OUTPUT_8,
                      OUTPUT_9, OUTPUT_10, OUTPUT_11, OUTPUT_12, OUTPUT_13, OUTPUT_14, OUTPUT_15, OUTPUT_16 };

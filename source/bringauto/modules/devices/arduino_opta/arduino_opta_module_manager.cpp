@@ -39,7 +39,8 @@ int arduino_opta_send_status_condition(const buffer current_status, const buffer
     return CONDITION_NOT_MET;
 }
 
-int arduino_opta_generate_command(buffer *generated_command, const buffer new_status, const buffer current_status, const buffer current_command) {
+int arduino_opta_generate_command(buffer *generated_command, const buffer new_status, const buffer current_status,
+                                  const buffer current_command) {
     if(allocate(generated_command, current_command.size_in_bytes) ==  NOT_OK) {
         return NOT_OK;
     }
