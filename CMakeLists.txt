@@ -7,11 +7,12 @@ SET(CMAKE_CXX_STANDARD 20)
 SET(CMAKE_CXX_EXTENSIONS OFF)   # For increased portability
 SET(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-SET(IO_MODULE_VERSION 1.2.7)
+SET(IO_MODULE_VERSION 1.2.8)
 
 OPTION(BRINGAUTO_INSTALL "Configure install" OFF)
 OPTION(BRINGAUTO_PACKAGE "Configure package creation" OFF)
 OPTION(BRINGAUTO_SYSTEM_DEP "System dependencies are used if switched to ON, packager used if OFF" OFF)
+OPTION(BRINGAUTO_GET_PACKAGES_ONLY "Only download packages for this project" OFF)
 OPTION(FLEET_PROTOCOL_BUILD_MODULE_GATEWAY "Build shared library for module gateway " ON)
 OPTION(FLEET_PROTOCOL_BUILD_EXTERNAL_SERVER "Build shared library for external server " ON)
 
@@ -46,6 +47,9 @@ FIND_PACKAGE(CMLIB
 
 IF (NOT BRINGAUTO_SYSTEM_DEP)
     INCLUDE(cmake/Dependencies.cmake)
+    IF (BRINGAUTO_GET_PACKAGES_ONLY)
+        RETURN()
+    ENDIF ()
 ENDIF ()
 
 FIND_PACKAGE(nlohmann_json 3.10.5 REQUIRED)
