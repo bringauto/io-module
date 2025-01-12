@@ -28,7 +28,7 @@ Status messages contain this information about components:
  - button
     - number of presses
 
-Status is generated on Device and sent to Internal server (using Internal client api). The Fleet protocol ensures that the external app will receive the status.
+When Status is generated on any device, the input and output states are measured and directly written into Status. If a device has a button, the presses of the button are counted between Statuses and are included into Status.
 
 > Status implementation is generic. That means that the number of inputs and outputs is modifiable. This is achieved by using a C++ template (DeviceStatus class is the template).
 
@@ -43,7 +43,7 @@ Command messages contain:
    - number of output, which this action will affect
    - ActionType enumeration, which could be SET_ON, SET_OFF, TOGGLE
 
-Command is generated based on Status message and sent from external app to External server. The Fleet protocol ensures that the Device will receive the command. Device should execute an action specified with ActionType on output with given number.
+For every command action in Command, the action is executed on specified output. The SET_ON action sets the output on, the SET_OFF sets it of and TOGGLE change the output state to negation of current state.
 
 ##### Class diagram
 
@@ -109,7 +109,9 @@ Status will be forwarded to the external app when:
  - there is a difference between the previous and current status (e.g. output has been turned on; state of any input has changed)
  - buttonPresses in Status is higher than 0 or buttonPresses is 0 and buttonPresses in previous status was higher than 0.
 
-### Arduino Mega R3
+### Arduino Mega R3 (deprecated)
+
+ **This device was deprecated because of its small memory and limited usage.**
 
 #### Device specs
  - input count : 4
