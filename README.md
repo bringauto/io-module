@@ -1,6 +1,8 @@
 # Introduction
 
-IO module covers input and output devices. Input and output states are included in Statuses and outputs can be changed using Commands.
+The IO Module is a module of the BringAuto in-house [Fleet Protocol](https://github.com/bringauto/fleet-protocol). It covers input and output
+devices. Input and output states are included in Statuses and outputs can be changed using
+Commands.
 
 For detailed documentation see [IO Module documentation](./doc/IO_module_doc.md).
 
