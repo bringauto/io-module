@@ -61,6 +61,7 @@ IF (FLEET_PROTOCOL_BUILD_EXTERNAL_SERVER)
     FIND_PACKAGE(fleet-http-client-shared 1.5.0 REQUIRED)
     ### fleet-http-client dependencies
     FIND_PACKAGE(Boost CONFIG REQUIRED)
+    FIND_PACKAGE(ZLIB REQUIRED)
     FIND_PACKAGE(cpprestsdk REQUIRED)
 ENDIF ()
 
@@ -113,6 +114,7 @@ IF (FLEET_PROTOCOL_BUILD_EXTERNAL_SERVER)
             INTERFACE
                 Boost::regex Boost::date_time Boost::atomic Boost::random Boost::chrono
                 Boost::system Boost::filesystem Boost::thread
+                ZLIB::ZLIB
     )
     TARGET_LINK_LIBRARIES(io-external-server-shared
             PRIVATE
