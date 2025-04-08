@@ -1,6 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.21)
 PROJECT(io_module CXX)
 
+
 SET(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
 SET(CMAKE_INSTALL_RPATH "$ORIGIN")
 SET(CMAKE_CXX_STANDARD 20)
@@ -59,7 +60,7 @@ FIND_PACKAGE(fleet-protocol-interface 2.0.0 REQUIRED)
 IF (FLEET_PROTOCOL_BUILD_EXTERNAL_SERVER)
     FIND_PACKAGE(fleet-http-client-shared 1.5.0 REQUIRED)
     ### fleet-http-client dependencies
-    FIND_PACKAGE(Boost REQUIRED)
+    FIND_PACKAGE(Boost CONFIG REQUIRED)
     FIND_PACKAGE(cpprestsdk REQUIRED)
 ENDIF ()
 
@@ -106,6 +107,12 @@ IF (FLEET_PROTOCOL_BUILD_EXTERNAL_SERVER)
             TYPE SHARED
             SOURCES "source/external_server_api.cpp" "source/memory_management.cpp" "source/device_management.cpp"
             VERSION ${IO_MODULE_VERSION}
+    )
+    # Explicitly add Boost dependencies due to obsolete cpprest cmake export package...
+    target_link_libraries(fleet-http-client-shared::fleet-http-client-shared
+            INTERFACE
+                Boost::regex Boost::date_time Boost::atomic Boost::random Boost::chrono
+                Boost::system Boost::filesystem Boost::thread
     )
     TARGET_LINK_LIBRARIES(io-external-server-shared
             PRIVATE
