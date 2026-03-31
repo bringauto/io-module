@@ -63,7 +63,7 @@ FIND_PACKAGE(fleet-protocol-cxx-helpers-static 1.2.0 REQUIRED)
 FIND_PACKAGE(fleet-protocol-interface 2.0.0 REQUIRED)
 
 IF (FLEET_PROTOCOL_BUILD_EXTERNAL_SERVER)
-    FIND_PACKAGE(fleet-http-client-shared 2.0.1 REQUIRED)
+    FIND_PACKAGE(fleet-http-client-shared 2.0.2 REQUIRED)
     ### fleet-http-client dependencies
     FIND_PACKAGE(Boost CONFIG REQUIRED)
     FIND_PACKAGE(ZLIB REQUIRED)
