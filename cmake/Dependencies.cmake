@@ -1,7 +1,7 @@
 SET(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH FALSE)
 
-BA_PACKAGE_LIBRARY(nlohmann-json            v3.10.5 NO_DEBUG ON)
-BA_PACKAGE_LIBRARY(zlib                     v1.2.11)
+BA_PACKAGE_LIBRARY(nlohmann-json            v3.12.0 NO_DEBUG ON)
+BA_PACKAGE_LIBRARY(zlib                     v1.3.2)
 BA_PACKAGE_LIBRARY(fleet-protocol-cpp       v1.2.0)
 BA_PACKAGE_LIBRARY(async-function-execution v1.0.0)
 BA_PACKAGE_LIBRARY(aeron                    v1.48.6)
